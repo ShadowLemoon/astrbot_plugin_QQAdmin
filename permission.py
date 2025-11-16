@@ -1,12 +1,15 @@
 
-from functools import wraps
 import inspect
-from typing import Awaitable, Callable, Any, AsyncGenerator, Dict, List, Optional, Union, cast
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from enum import IntEnum
+from functools import wraps
+from typing import Any, Optional, cast
+
+from astrbot import logger
 from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     AiocqhttpMessageEvent,
 )
-from astrbot import logger
+
 from .utils import get_ats
 
 
@@ -58,8 +61,8 @@ class PermissionManager:
 
     def __init__(
         self,
-        superusers: Optional[List[str]] = None,
-        perms: Optional[Dict[str, str]] = None,
+        superusers: list[str] | None = None,
+        perms: dict[str, str] | None = None,
         level_threshold: int = 10,
     ):
         if self._initialized:
@@ -67,7 +70,7 @@ class PermissionManager:
         self.superusers = superusers or []
         if perms is None:
             raise ValueError("初始化必须传入 perms")
-        self.perms: Dict[str, PermLevel] = {
+        self.perms: dict[str, PermLevel] = {
             k: PermLevel.from_str(v) for k, v in perms.items()
         }
         self.level_threshold = level_threshold
@@ -76,8 +79,8 @@ class PermissionManager:
     @classmethod
     def get_instance(
         cls,
-        superusers: Optional[List[str]] = None,
-        perms: Optional[Dict[str, str]] = None,
+        superusers: list[str] | None = None,
+        perms: dict[str, str] | None = None,
         level_threshold: int = 50,
     ) -> "PermissionManager":
         if cls._instance is None:
@@ -159,7 +162,7 @@ def perm_required(
     """
 
     def decorator(
-        func: Callable[..., Union[AsyncGenerator[Any, Any], Awaitable[Any]]],
+        func: Callable[..., AsyncGenerator[Any, Any] | Awaitable[Any]],
     ) -> Callable[..., AsyncGenerator[Any, Any]]:
         actual_perm_key = perm_key or func.__name__
         @wraps(func)

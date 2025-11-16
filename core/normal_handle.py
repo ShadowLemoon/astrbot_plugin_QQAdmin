@@ -1,11 +1,13 @@
 
 import asyncio
 import random
+
 from astrbot.core import AstrBotConfig
 from astrbot.core.message.components import At, Plain, Reply
 from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     AiocqhttpMessageEvent,
 )
+
 from ..utils import BAN_ME_QUOTES, extract_image_url, get_ats, get_nickname
 
 
@@ -75,12 +77,12 @@ class NormalHandle:
         self, event: AiocqhttpMessageEvent, target_card: str | int | None = None
     ):
         """改名 xxx @user"""
-        target_card = target_card or event.get_sender_name()
+        target_card = str(target_card) if target_card else ""
         tids = get_ats(event) or [event.get_sender_id()]
         for tid in tids:
             target_name = await get_nickname(event, user_id=tid)
-            replay = f"已将{target_name}的群昵称改为【{target_card}】"
-            await event.send(event.plain_result(replay))
+            msg = f"已修改{target_name}的群昵称为【{target_card}】" if target_card else f"已清除{target_name}的群昵称"
+            await event.send(event.plain_result(msg))
             await event.bot.set_group_card(
                 group_id=int(event.get_group_id()),
                 user_id=int(tid),
@@ -91,23 +93,25 @@ class NormalHandle:
         self, event: AiocqhttpMessageEvent, target_card: str | int | None = None
     ):
         """改我 xxx"""
-        target_card = target_card or event.get_sender_name()
+        target_card = str(target_card) if target_card else ""
+        msg = f"已修改你的群昵称为【{target_card}】" if target_card else "已清除你的群昵称"
+        await event.send(event.plain_result(msg))
         await event.bot.set_group_card(
             group_id=int(event.get_group_id()),
             user_id=int(event.get_sender_id()),
             card=str(target_card),
         )
-        await event.send(event.plain_result(f"已将你的群昵称改为【{target_card}】"))
 
     async def set_group_special_title(
         self, event: AiocqhttpMessageEvent, new_title: str | int | None = None
     ):
         """头衔 xxx @user"""
-        new_title = str(new_title) or event.get_sender_name()
+        new_title = str(new_title) if new_title else ""
         tids = get_ats(event) or [event.get_sender_id()]
         for tid in tids:
             target_name = await get_nickname(event, user_id=tid)
-            await event.send(event.plain_result(f"已将{target_name}的头衔改为【{new_title}】"))
+            msg = f"已修改{target_name}的头衔为【{new_title}】" if new_title else f"已清除{target_name}的头衔"
+            await event.send(event.plain_result(msg))
             await event.bot.set_group_special_title(
                 group_id=int(event.get_group_id()),
                 user_id=int(tid),
@@ -115,18 +119,20 @@ class NormalHandle:
                 duration=-1,
             )
 
+
     async def set_group_special_title_me(
         self, event: AiocqhttpMessageEvent, new_title: str | int | None = None
     ):
         """申请头衔 xxx"""
-        new_title = str(new_title) or event.get_sender_name()
+        new_title = str(new_title) if new_title else ""
+        msg = f"已将你的头衔改为【{new_title}】" if new_title else "已清除你的头衔"
+        await event.send(event.plain_result(msg))
         await event.bot.set_group_special_title(
             group_id=int(event.get_group_id()),
             user_id=int(event.get_sender_id()),
             special_title=new_title,
             duration=-1,
         )
-        await event.send(event.plain_result(f"已将你的头衔改为【{new_title}】"))
 
     async def set_group_kick(self, event: AiocqhttpMessageEvent):
         """踢了@user"""

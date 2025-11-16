@@ -1,12 +1,14 @@
 import asyncio
-from collections import defaultdict, deque
 import random
 import time
+from collections import defaultdict, deque
+
 from astrbot.api import logger
 from astrbot.core.config.astrbot_config import AstrBotConfig
 from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     AiocqhttpMessageEvent,
 )
+
 from ..utils import get_ats, get_nickname
 
 

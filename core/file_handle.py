@@ -1,18 +1,15 @@
-from datetime import datetime
 import os
-from pathlib import Path
 import re
-from typing import Any, Dict
+from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from astrbot.api import logger
 from astrbot.core.message.components import File, Image, Reply, Video
 from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     AiocqhttpMessageEvent,
 )
-from typing import TYPE_CHECKING
-
 from data.plugins.astrbot_plugin_qqadmin.utils import download_file
-
 
 if TYPE_CHECKING:
     from data.plugins.astrbot_plugin_qqadmin.main import QQAdminPlugin
@@ -123,7 +120,7 @@ class FileHandle:
 
         return "\n".join(info), mapping
 
-    def _format_file_info(self, file: Dict[str, Any]) -> str:
+    def _format_file_info(self, file: dict[str, Any]) -> str:
         """格式化文件信息"""
         lines = [f"【📄 {file.get('file_name', '未知')}】"]
         size = int(file.get("size", "0"))
@@ -172,7 +169,7 @@ class FileHandle:
         chain = event.message_obj.message
         reply_chain = chain[0].chain if chain and isinstance(chain[0], Reply) else None
         seg = reply_chain[0] if reply_chain else None
-        if seg and isinstance(seg, (File, Image, Video)):
+        if seg and isinstance(seg, File | Image | Video):
             if url := getattr(seg, "url", None) or getattr(seg, "file", None):
                 logger.info(f"正在从URL下载文件：{url}")
                 file_path = self.data_dir / file_name
@@ -279,7 +276,7 @@ class FileHandle:
             else:
                 await event.send(event.plain_result(f"群文件夹【{folder_name}】不存在"))
 
-    async def view_group_file(self, event: AiocqhttpMessageEvent, path: str):
+    async def view_group_file(self, event: AiocqhttpMessageEvent, path):
         """查看群文件/目录，path 可以是 文件夹名、文件名 或 文件夹名/文件名"""
         group_id = int(event.get_group_id())
         client = event.bot
@@ -290,7 +287,7 @@ class FileHandle:
             yield event.plain_result(text)
             return
 
-        folder_name, file_name = await self._parse_path(event, path)
+        folder_name, file_name = await self._parse_path(event, str(path))
 
         if folder_name and file_name:
             target_folder, file = await self._get_file_in_folder(

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
+
 from astrbot.api import logger
 from astrbot.core.message.components import At
 from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     AiocqhttpMessageEvent,
 )
-from astrbot.core.utils.session_waiter import session_waiter, SessionController
+from astrbot.core.utils.session_waiter import SessionController, session_waiter
+
 from ..utils import format_time, get_nickname
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from data.plugins.astrbot_plugin_qqadmin.main import QQAdminPlugin

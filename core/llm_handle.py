@@ -1,12 +1,13 @@
 import re
 from typing import Any
+
+from astrbot import logger
 from astrbot.api.star import Context
 from astrbot.core.config.astrbot_config import AstrBotConfig
-from astrbot import logger
 from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     AiocqhttpMessageEvent,
 )
-from data.plugins.astrbot_plugin_qqadmin.utils import get_ats
+from data.plugins.astrbot_plugin_qqadmin.utils import get_ats, get_nickname
 
 
 class LLMHandle:
@@ -37,7 +38,7 @@ class LLMHandle:
         return contexts
 
     async def get_msg_contexts(
-        self, event: AiocqhttpMessageEvent, target_id: str, query_rounds: int
+        self, event: AiocqhttpMessageEvent, target_id: str, query_rounds: int = 10
     ) -> list[dict]:
         """持续获取群聊历史消息直到达到要求"""
         group_id = event.get_group_id()
@@ -80,31 +81,24 @@ class LLMHandle:
 
 
 
-    async def ai_set_card(
-        self, event: AiocqhttpMessageEvent, at_str: str, query_rounds: int
-    ):
+    async def ai_set_card(self, event: AiocqhttpMessageEvent):
         """让AI设置群友的群名片"""
         at_ids = get_ats(event)
-        if not at_ids:
-            await event.send(event.plain_result("请@群友"))
-            return
+        target_id = at_ids[0] if at_ids else event.get_sender_id()
+        raw_card = await get_nickname(event, target_id)
 
-        target_id: str = at_ids[0]
-        raw_card = at_str.removeprefix("@").split("(")[0]
+        logger.info(f"正在根据{raw_card}（{target_id}）的聊天记录生成新昵称...")
 
-        logger.info(f"正在根据 {raw_card} 的聊天记录生成新昵称...")
-
-        query_rounds = min(200, max(1, int(query_rounds)))
-        contexts = await self.get_msg_contexts(event, target_id, query_rounds)
+        contexts = await self.get_msg_contexts(event, target_id)
         if not contexts:
             await event.send(event.plain_result("聊天记录为空"))
             return
-        logger.debug(contexts)
+        logger.debug(f"获取到{raw_card}（{target_id}）的聊天记录：{contexts}")
 
         system_prompt = (
-            "请根据这位群友的聊天记录，生成一个昵称。\n"
+            "请你扮演一名起名专家，根据这位群友的聊天记录，生成一个昵称。\n"
             "注意：昵称要简洁且符合这位群友的人格特征。\n"
-            "请只返回一个昵称，并且用 Markdown 加粗格式返回，例如：**小明**。\n"
+            "请只返回一个昵称，并用精辟的一句话说明取这个昵称的理由，昵称要用 Markdown 加粗，理由要用英文单引号引出。例如：“新昵称：**白嫖怪** \n理由：'太喜欢白嫖别人的成果'”\n"
             "不要附带任何多余的文字、解释或标点。"
         )
 
@@ -125,10 +119,20 @@ class LLMHandle:
         # 保留中英文，最多8个字符
         new_card = re.sub(r"[^a-zA-Z\u4e00-\u9fff]", "", match.group(1))[:8]
 
+        # 提取单引号内的内容（理由）
+        reason_match = re.search(r"'([^']*)'", llm_respond)
+        if not reason_match:
+            await event.send(
+                event.plain_result(f"未能从LLM回复中提取到取昵称的理由: {llm_respond}")
+            )
+            return
+        reason = reason_match.group(1)
+
         await event.bot.set_group_card(
             group_id=int(event.get_group_id()),
             user_id=int(target_id),
             card=new_card,
         )
         await event.send(event.plain_result(f"给{raw_card}取的新昵称：{new_card}"))
-        logger.info(f"已为 {target_id} 设置群昵称: {new_card}")
+        await event.send(event.plain_result(f"理由：{reason}"))
+        logger.info(f"已为 {target_id} 设置群昵称: {new_card}, 理由：{reason}")

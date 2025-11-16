@@ -1,4 +1,6 @@
+import asyncio
 import random
+
 from astrbot import logger
 from astrbot.api.event import filter
 from astrbot.api.star import Context, Star, StarTools, register
@@ -7,20 +9,22 @@ from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     AiocqhttpMessageEvent,
 )
 from astrbot.core.star.filter.event_message_type import EventMessageType
-from .core.file_handle import FileHandle
-from .core.llm_handle import LLMHandle
+
+from .core.curfew_handle import CurfewHandle
 from .core.enhance_handel import EnhanceHandle
-from .utils import ADMIN_HELP, print_logo
+from .core.file_handle import FileHandle
+from .core.join_handle import JoinHandle
+from .core.llm_handle import LLMHandle
 from .core.member_handle import MemberHandle
 from .core.normal_handle import NormalHandle
 from .core.notice_handle import NoticeHandle
-from .core.curfew_handle import CurfewHandle
-from .core.join_handle import JoinHandle
 from .permission import (
-    PermLevel,
     PermissionManager,
+    PermLevel,
     perm_required,
 )
+from .utils import ADMIN_HELP, print_logo
+
 
 @register("astrbot_plugin_qqadmin", "Zhalslar", "...", "...")
 class QQAdminPlugin(Star):
@@ -41,7 +45,7 @@ class QQAdminPlugin(Star):
         self.file = FileHandle(self, self.plugin_data_dir)
         self.curfew = CurfewHandle(self.context, self.plugin_data_dir)
         self.llm = LLMHandle(self.context, self.conf)
-        await self.curfew.initialize()
+        asyncio.create_task(self.curfew.initialize())
 
         # 初始化权限管理器
         PermissionManager.get_instance(
@@ -57,7 +61,7 @@ class QQAdminPlugin(Star):
     async def on_platform_loaded(self):
         """平台加载完成时"""
         if not self.curfew.curfew_managers:
-            await self.curfew.initialize()
+            asyncio.create_task(self.curfew.initialize())
 
 
 
@@ -318,15 +322,13 @@ class QQAdminPlugin(Star):
         event: AiocqhttpMessageEvent,
         path: str | int | None = None,
     ):
-        async for r in self.file.view_group_file(event, str(path)):
+        async for r in self.file.view_group_file(event, path):
             yield r
 
-    @filter.command("取名", desc="取名@群友 <抽取消息轮数>", alias={"取昵称"})
+    @filter.command("取名", desc="取名@群友", alias={"取昵称"})
     @perm_required(PermLevel.ADMIN, check_at=False)
-    async def ai_set_card(
-        self, event: AiocqhttpMessageEvent, at_str: str, query_rounds: int = 20
-    ):
-        await self.llm.ai_set_card(event, at_str, query_rounds)
+    async def ai_set_card(self, event: AiocqhttpMessageEvent):
+        await self.llm.ai_set_card(event)
 
     @filter.command("群管帮助")
     async def qq_admin_help(self, event: AiocqhttpMessageEvent):

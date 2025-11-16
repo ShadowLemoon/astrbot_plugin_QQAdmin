@@ -1,15 +1,17 @@
 from __future__ import annotations
-from datetime import datetime
+
 import os
-from pathlib import Path
 import textwrap
+from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING
+
 from astrbot.api import logger
 from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
     AiocqhttpMessageEvent,
 )
 
 from ..utils import download_file, extract_image_url
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from data.plugins.astrbot_plugin_qqadmin.main import QQAdminPlugin
