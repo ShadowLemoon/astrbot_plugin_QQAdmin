@@ -267,6 +267,7 @@ class QQAdminPlugin(Star):
         await self.join.view_reject_keywords(event)
 
     @filter.command("添加进群黑名单", desc="添加指定ID到进群黑名单")
+    @perm_required(PermLevel.ADMIN)
     async def add_reject_ids(self, event: AiocqhttpMessageEvent):
         """添加指定ID到进群黑名单"""
         await self.join.add_reject_ids(event)
