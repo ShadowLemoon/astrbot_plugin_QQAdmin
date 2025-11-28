@@ -237,12 +237,12 @@ class QQAdminPlugin(Star):
 
 
     @filter.command("设置进群审核", desc="设置本群进群审核开关（开/关/清除）")
-    @perm_required(PermLevel.ADMIN)
+    @perm_required(PermLevel.SUPERUSER)
     async def set_join_review(self, event: AiocqhttpMessageEvent):
         await self.join.set_join_review(event)
 
     @filter.command("查看进群审核", desc="查看本群进群审核开关状态", alias={"进群审核"})
-    @perm_required(PermLevel.ADMIN)
+    @perm_required(PermLevel.SUPERUSER)
     async def view_join_review(self, event: AiocqhttpMessageEvent):
         await self.join.view_join_review(event)
 
