@@ -270,7 +270,7 @@ class QQAdminPlugin(Star):
     @perm_required(PermLevel.ADMIN)
     async def handle_reject_ids(self, event: AiocqhttpMessageEvent):
         "设置/查看进群黑名单（空格隔开，无参数表示查看）"
-        await self.join.handle_reject_ids(event)
+        await self.join.handle_block_ids(event)
         # 考虑到一般用来移出/清空黑名单，所以简化了命令
 
     @filter.command("批准", alias={"同意进群"}, desc="批准进群申请")

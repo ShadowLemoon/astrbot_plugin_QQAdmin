@@ -19,7 +19,7 @@
       "default_max_time": {
         "description": "默认进群最大尝试次数",
         "hint": "当用户申请进行的次数超过此值时，自动拒绝进群申请。可通过群内命令为当前群聊设置",
-        "type": "bool",
+        "type": "int",
         "default": 3
       },
       "no_match_reject": {
