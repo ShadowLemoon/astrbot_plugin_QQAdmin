@@ -57,6 +57,12 @@
         "hint": "当用户主动退群时，自动拉黑（即添加到进群黑名单）",
         "type": "bool",
         "default": false
+      },
+      "reject_word_block": {
+        "description": "进群黑词自动拉黑",
+        "hint": "当用户因触发进群黑词而被拒绝进群时，自动拉黑该用户",
+        "type": "bool",
+        "default": false
       }
     }
   },
