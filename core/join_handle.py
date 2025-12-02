@@ -219,7 +219,7 @@ class JoinHandle:
 
         # 进群审核总开关
         await self.db.ensure_group(group_id)
-        if not self.db.get_switch(group_id):
+        if not await self.db.get_switch(group_id):
             return
 
         client = event.bot
